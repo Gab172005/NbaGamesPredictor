@@ -1,0 +1,124 @@
+====================================================================
+MILESTONE 4 FINAL SUMMARY: HYPERPARAMETER TUNING & PROJECT WRAP-UP
+====================================================================
+
+1. OVERVIEW & DELIVERABLES
+--------------------------
+In Milestone 4, we tuned our three from-scratch models (KNN, Gaussian
+Naive Bayes, and Logistic Regression) using strictly leak-free
+time-series cross-validation, compared every tuned model against its
+Milestone 3 untuned version, inspected which NBA stats matter most, and
+updated README.md for the final project presentation.
+
+Everything remains 100% from scratch using only Python's standard
+library and NumPy (with Matplotlib strictly for charts).
+
+Files created / updated in Milestone 4:
+  - models.py                       : Added optional L2 weight penalty
+                                      (l2=0.0 default) to LogisticRegression.
+  - tune_models.py                  : Expanding-window time-series grid
+                                      search strictly on training data.
+  - best_hyperparams.json           : Best settings picked on train CV.
+  - tuning_results.csv              : Log of all 46 tested configs.
+  - run_milestone4.py               : Final Untuned vs. Tuned benchmark
+                                      and presentation chart generator.
+  - milestone4_results.csv          : Final comparison table in CSV.
+  - plots/tuned_vs_untuned.png      : Before-vs-after tuning bar charts.
+  - plots/feature_importance.png    : Top 10 NBA stats (Logistic Reg).
+  - plots/final_model_comparison.png: Final model showcase slide.
+  - milestone_4.txt                 : This plain-English final report.
+  - README.md                       : Full GitHub project overview.
+
+
+2. HOW WE TUNED WITHOUT CHEATING (STRICT VAULT RULE)
+----------------------------------------------------
+A common mistake in machine learning is tuning settings directly on the
+test set, which artificially inflates scores. To avoid that:
+  - Our final 187 test games (2023-01-28 to 2023-02-28) were locked in
+    a vault and NEVER touched during tuning.
+  - tune_models.py tested 46 configurations strictly inside the first
+    744 training games using 5 expanding-window chronological folds
+    (124 games per block), re-standardizing features inside every fold.
+  - For each model, we picked the setting with the highest average
+    training-CV accuracy (breaking ties by ROC-AUC, then Log-Loss).
+
+Search Grids & Winning Settings (from best_hyperparams.json):
+  - KNN (8 values of k: 5 to 55):
+      Winner -> k = 35  (Train 5-Fold CV Acc: 61.45%)
+  - Gaussian NB (8 values of var_smoothing: 1e-9 to 2.0):
+      Winner -> var_smoothing = 1.0  (Train 5-Fold CV Acc: 62.10%)
+  - Logistic Regression (30 combos of lr, epochs, l2):
+      Winner -> lr = 0.05, epochs = 1000, l2 = 0.1  (Train CV: 62.26%)
+
+
+3. FINAL RESULTS: UNTUNED (M3) VS. TUNED (M4)
+---------------------------------------------
+Evaluated on the 187 untouched holdout games (2023-01-28 to 2023-02-28)
+plus full-season 5-fold expanding-window CV:
+
+  Model                   Acc     Prec    Rec     F1      AUC    LogLoss  5-Fold CV
+  ----------------------------------------------------------------------------------
+  Always Pick Home       58.29%  58.29% 100.00%  73.65%  0.500   0.6799    59.54%
+  KNN (Untuned, k=15)    63.10%  65.15%  78.90%  71.37%  0.655   0.6370    59.79%
+  KNN (Tuned, k=35)      62.03%  61.88%  90.83%  73.61%  0.631   0.6432    62.37%
+  Gaussian NB (Untuned)  62.57%  65.12%  77.06%  70.59%  0.678   0.7049    58.76%
+  Gaussian NB (Tuned)    63.64%  63.95%  86.24%  73.44%  0.688   0.6188    62.76%
+  Logistic Reg (Untuned) 63.10%  62.66%  90.83%  74.16%  0.663   0.6427    61.98%
+  Logistic Reg (Tuned)   63.10%  62.20%  93.58%  74.73%  0.686   0.6413    62.63%
+
+
+4. WHAT IMPROVED & WHAT WE LEARNED
+----------------------------------
+  1) Tuned Gaussian Naive Bayes Was Our Biggest Breakthrough:
+     In Milestone 3, we noticed Gaussian NB ranked games well (0.678
+     AUC) but had terrible Log-Loss (0.7049) because correlated stats
+     made it overconfident. Increasing var_smoothing to 1.0 widened its
+     bell curves and fixed that problem completely:
+       * Test Accuracy : 62.57% -> 63.64% (+5.35% over baseline, #1!)
+       * ROC-AUC       : 0.678  -> 0.688  (#1 overall!)
+       * Log-Loss      : 0.7049 -> 0.6188 (-0.0861 drop, #1 overall!)
+       * 5-Fold CV Acc : 58.76% -> 62.76% (+4.00 pp jump, #1 overall!)
+
+  2) Light L2 Regularization Sharpened Logistic Regression:
+     Adding a small L2 penalty (l2 = 0.1) kept weights stable across
+     overlapping stats like win_pct and avg_point_diff:
+       * ROC-AUC jumped from 0.663 -> 0.686 (+0.023)
+       * F1-Score rose from 74.16% -> 74.73% (#1 overall!)
+       * Full-season 5-Fold CV improved from 61.98% -> 62.63%
+       * Held steady at 63.10% test accuracy with lower Log-Loss (0.6413).
+
+  3) KNN Showed a Classic Bias-Variance Trade-Off:
+     Moving from k=15 to k=35 smoothed out noise and lifted full-season
+     5-Fold CV from 59.79% -> 62.37% (+2.58 pp), though on the final
+     187-game holdout window it dipped slightly (63.10% -> 62.03%) as
+     larger neighborhoods pulled close games toward the home majority.
+
+  4) What Stats Actually Win NBA Games (Feature Importance):
+     Looking at Tuned Logistic Regression's largest learned weights:
+       * home_avg_point_diff  (+0.102) : Strong home scoring margin
+       * visitor_is_b2b       (+0.097) : Road team tired on back-to-back
+       * diff_avg_point_diff  (+0.088) : Scoring margin gap between teams
+       * home_avg_pts_allowed (-0.064) : Weak home defense helps visitors
+       * home_win_pct         (+0.056) : Overall home team win rate
+       * home_avg_pts_scored  (+0.056) : Home offensive firepower
+       * home_is_b2b          (-0.032) : Home team tired on back-to-back
+     These match real basketball intuition: average point differential
+     and back-to-back fatigue are stronger predictors than win-loss
+     record alone!
+
+
+5. HONEST LIMITATIONS & CONCLUSION
+----------------------------------
+Why do even well-tuned NBA models sit around ~63-64% accuracy instead
+of 90%? Basketball has huge night-to-night randomness: star players
+sitting out for injury/rest, mid-season roster trades, foul trouble,
+and hot or cold 3-point shooting nights are not in team-level pre-game
+box scores. Even professional Las Vegas oddsmakers typically hit around
+66-69% across a full NBA season.
+
+Beating the 58.29% home-court baseline by over +5.3 percentage points
+(63.64% accuracy, 0.688 ROC-AUC, 0.6188 Log-Loss) using clean,
+from-scratch Python & NumPy models shows that simple, understandable
+algorithms can capture genuine basketball signal without heavy black-box
+libraries.
+

@@ -1,0 +1,13 @@
+{
+  "KNN": {
+    "k": 35
+  },
+  "Gaussian NB": {
+    "var_smoothing": 1.0
+  },
+  "Logistic Reg": {
+    "lr": 0.05,
+    "epochs": 1000,
+    "l2": 0.1
+  }
+}
