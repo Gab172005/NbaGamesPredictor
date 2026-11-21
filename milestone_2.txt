@@ -1,0 +1,128 @@
+====================================================================
+MILESTONE 2 SUMMARY: NBA GAME PREDICTION FROM SCRATCH
+====================================================================
+
+1. PROJECT OVERVIEW
+-------------------
+Our goal is to predict whether the home team wins an NBA regular-season
+game (home_win = 1 for a home win, 0 for a visitor win) using 931 games
+from the 2022-23 season (clean/nba_2022_23_prepared.csv). Everything in
+this project--loading the CSV, splitting and scaling the data, and all
+three machine learning models--is written from scratch using only
+Python's standard library (csv, math) and NumPy (no scikit-learn or
+pandas).
+
+Project files:
+  - data_utils.py     : Loads the CSV, picks 23 team stats, splits 80/20
+                        in time order, and standardizes the features.
+  - models.py         : Contains all 3 from-scratch models (KNN,
+                        GaussianNB, LogisticRegression).
+  - run_milestone2.py : Trains all 3 models, prints Train vs. Test
+                        accuracy against the baseline, and shows example
+                        game predictions.
+  - milestone_2.txt   : This plain-English summary.
+
+
+2. FEATURES USED (23 DIRECT TEAM STATS)
+---------------------------------------
+The prepared CSV has 59 numeric columns, including 36 prior-season
+player-stat columns (*_prev_*). To keep our project clean, focused, and
+easy to explain, we dropped those 36 prior-season columns and kept only
+the 23 intuitive current-season team stats measured before tipoff:
+
+  - Season Record & Games Played (5):
+      home_games_played, visitor_games_played, home_win_pct,
+      visitor_win_pct, diff_win_pct
+  - Season Scoring & Point Differential (7):
+      home_avg_point_diff, visitor_avg_point_diff, diff_avg_point_diff,
+      home_avg_pts_scored, visitor_avg_pts_scored,
+      home_avg_pts_allowed, visitor_avg_pts_allowed
+  - Recent 5-Game Form (6):
+      home_last5_win_pct, visitor_last5_win_pct, diff_last5_win_pct,
+      home_last5_point_diff, visitor_last5_point_diff,
+      diff_last5_point_diff
+  - Rest & Fatigue (5):
+      home_rest_days, visitor_rest_days, diff_rest_days,
+      home_is_b2b, visitor_is_b2b
+
+Feature Scaling:
+Because these stats live on very different scales (for example, average
+points scored is around 115 while win percentage is between 0 and 1),
+we standardize every feature using (x - mean) / std. Importantly, we
+calculate the mean and standard deviation using ONLY the training set,
+then apply those same numbers to scale the test set so test information
+never leaks into training.
+
+
+3. WHY WE SPLIT CHRONOLOGICALLY (80% TRAIN / 20% TEST)
+------------------------------------------------------
+We sort all 931 games by date (and game_id to break ties on the same
+day), then use the earlier games for training and the later games for
+testing:
+
+  - Training Set (first 80%): 744 games (2022-10-18 to 2023-01-28)
+  - Test Set     (last 20%) : 187 games (2023-01-28 to 2023-02-28)
+
+Why not shuffle randomly? In real basketball, you can only use past
+games to predict upcoming games. Because season stats like win
+percentage and average point differential update after each game, a
+random shuffle would let future games appear in the training set and
+secretly leak information about earlier games in the test set. A
+chronological split prevents that data leakage and tests our models the
+same way they would be used during a live NBA season.
+
+
+4. HOW OUR 3 MODELS WORK
+------------------------
+  1) K-Nearest Neighbors (KNN, k = 15):
+     KNN simply stores all scaled training games during fit(). When
+     predicting a new game, it measures the straight-line (Euclidean)
+     distance between that game's stats and every past training game to
+     find the 15 most similar matchups. It then takes a vote among those
+     15 similar games to estimate the probability that the home team
+     wins.
+
+  2) Gaussian Naive Bayes (GaussianNB):
+     During training, Gaussian Naive Bayes calculates the average and
+     spread (variance) of every stat separately for games the home team
+     won versus games the home team lost. To predict a new game, it
+     checks whether the game's stats look closer to a typical home win
+     or a typical home loss assuming each stat follows a bell curve. It
+     combines those probabilities across all 23 stats (using logs for
+     numerical stability) and picks the more likely winner.
+
+  3) Logistic Regression (LogisticRegression):
+     Logistic Regression learns one weight for each of the 23 stats plus
+     a bias term, where positive weights favor the home team and
+     negative weights favor the visiting team. It multiplies each stat
+     by its weight, sums them up, and passes the total through a sigmoid
+     curve to turn it into a home-win probability between 0% and 100%.
+     During training, it uses simple gradient descent (1,000 steps at
+     learning rate 0.05) to repeatedly nudge the weights so predictions
+     get closer to the true game outcomes.
+
+
+5. INITIAL RESULTS
+------------------
+Home teams naturally win more than half of NBA games, so we compare our
+models against a simple "Always Pick Home Team" baseline:
+
+  Model                      Train Acc   Test Acc   vs. Baseline (Test)
+  ---------------------------------------------------------------------
+  Always Pick Home (Base)       59.95%     58.29%                    --
+  KNN (k=15)                    65.46%     63.10%                +4.81%
+  Gaussian Naive Bayes          61.29%     62.57%                +4.28%
+  Logistic Regression           62.77%     63.10%                +4.81%
+
+Key Takeaways:
+  - All three from-scratch models beat the "always pick home" baseline
+    by more than 4 percentage points on unseen late-season games.
+  - KNN (63.10%) and Logistic Regression (63.10%) tied for the highest
+    initial test accuracy, with Gaussian Naive Bayes close behind
+    (62.57%).
+  - Train and test accuracies stay close to each other for all three
+    models, suggesting they are picking up genuine basketball signals
+    rather than overfitting the training games.
+  - Next in Milestone 3, we can dig deeper with fuller evaluation
+    metrics (like confusion matrices, precision/recall/F1, and ROC-AUC)
+    and tune model settings carefully without leaking test data.
