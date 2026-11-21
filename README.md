@@ -92,19 +92,19 @@ This chronological approach helps prevent future games from being used to train 
 
 ### Feature Scaling
 
-Features are standardized using:
+Features are standardized using the following calculation, as implemented in `data_utils.py`:
 
-\[
-z = \frac{x-\mu}{\sigma}
-\]
+```text
+(X - mean) / std
+```
 
-where:
+Where:
 
-- \(x\) is the original feature value.
-- \(\mu\) is the training-set mean.
-- \(\sigma\) is the training-set standard deviation.
+- `X` represents the original feature values.
+- `mean` is calculated from the training data.
+- `std` is the standard deviation calculated from the training data.
 
-The scaler is fitted exclusively on the training set and then applied to the testing set. This prevents information from the test set from influencing preprocessing.
+The mean and standard deviation are computed exclusively from the training set. The same values are then used to scale both the training and testing data, preventing information from the test set from influencing preprocessing.
 
 ---
 
@@ -114,7 +114,7 @@ All three classification algorithms are implemented in `models.py`.
 
 ### 1. K-Nearest Neighbors (KNN)
 
-KNN predicts a game's outcome by identifying the \(k\) most similar historical games using Euclidean distance.
+KNN predicts a game's outcome by identifying the `k` most similar historical games using Euclidean distance.
 
 The predicted home-win probability is based on the proportion of home wins among those nearest neighbors.
 
@@ -130,11 +130,13 @@ The implementation calculates probabilities in log-space to improve numerical st
 
 ### 3. Logistic Regression
 
-Logistic Regression estimates the probability of a home-team victory using a sigmoid activation function:
+Logistic Regression estimates the probability of a home-team victory using a sigmoid activation function, implemented in `models.py`:
 
-\[
-\sigma(z)=\frac{1}{1+e^{-z}}
-\]
+```text
+sigmoid(z) = 1 / (1 + exp(-z))
+```
+
+The function converts the model's calculated score into a probability between 0 and 1.
 
 The model learns feature weights through batch gradient descent and supports optional L2 regularization to reduce overly large weights.
 
@@ -482,3 +484,4 @@ The project emphasizes implementing machine learning fundamentals rather than re
 This project demonstrates how fundamental machine learning algorithms can be implemented, evaluated, and improved from scratch.
 
 Beyond predicting NBA game outcomes, it provides practical experience with data preprocessing, feature selection, classification algorithms, evaluation metrics, chronological cross-validation, and hyperparameter optimization.
+
