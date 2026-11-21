@@ -123,7 +123,7 @@ def main():
     X_train, X_test, y_train, y_test, _, _ = chronological_split(X, y, games)
     X_train_s, X_test_s, _, _ = standardize(X_train, X_test)
 
-    with open("best_hyperparams.json", "r", encoding="utf-8") as f:
+    with open("results/best_hyperparams.json", "r", encoding="utf-8") as f:
         best = json.load(f)
 
     # Home-team baseline
@@ -186,7 +186,7 @@ def main():
         direction = "Home +" if tuned_lr_weights[idx] >= 0 else "Away +"
         print(f"  {feature_names[idx]:<26}: {tuned_lr_weights[idx]:+.4f}  ({direction})")
 
-    with open("milestone4_results.csv", "w", encoding="utf-8", newline="") as f:
+    with open("results/milestone4_results.csv", "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)

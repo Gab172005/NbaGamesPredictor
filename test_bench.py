@@ -158,7 +158,7 @@ def main():
               f"FN: {r['fn']:>3}, TP: {r['tp']:>3}")
 
     # Save CSV and plots
-    with open("milestone3_results.csv", "w", encoding="utf-8", newline="") as f:
+    with open("results/milestone3_results.csv", "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)

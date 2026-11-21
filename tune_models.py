@@ -101,12 +101,12 @@ def main():
         )
 
     # Save full grid-search log and winning settings
-    with open("tuning_results.csv", "w", encoding="utf-8", newline="") as f:
+    with open("results/tuning_results.csv", "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(audit_rows[0].keys()))
         writer.writeheader()
         writer.writerows(audit_rows)
 
-    with open("best_hyperparams.json", "w", encoding="utf-8") as f:
+    with open("results/best_hyperparams.json", "w", encoding="utf-8") as f:
         json.dump(best_params, f, indent=2)
 
     print(f"\nTested {len(audit_rows)} configs total.")
