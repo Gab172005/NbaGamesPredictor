@@ -1,82 +1,95 @@
-# NBA Game Outcome Predictor (Built From Scratch)
+# NBA Game Outcome Predictor — Milestone 3
 
-A beginner-friendly machine learning project that predicts whether the **home team wins** an NBA regular-season game (`home_win`: `1` = Home Win, `0` = Away Win) using **three algorithms built 100% from scratch** with only Python's standard library (`csv`, `math`) and `numpy` — no `scikit-learn` or `pandas`.
+**Custom Evaluation Metrics, 5-Fold Time-Series Cross-Validation & Benchmark Visualizations**
 
----
-
-## Project Overview
-
-- **Goal:** Predict NBA game outcomes before tipoff using easy-to-explain team performance, momentum, and schedule-fatigue stats, and compare three classic ML algorithms fairly without any data leakage.
-- **Dataset:** `clean/nba_2022_23_prepared.csv` — **931 regular-season games** from the 2022–23 NBA season (`2022-10-18` to `2023-02-28`, 0 missing values).
-- **Features Used (23 Direct Team Stats):** We dropped the 36 prior-season player-stat columns (`*_prev_*`) and kept only the 23 clear, current-season pre-game team stats:
-  - **Season Record & Games Played (5):** `home_games_played`, `visitor_games_played`, `home_win_pct`, `visitor_win_pct`, `diff_win_pct`
-  - **Scoring & Point Differential (7):** `home_avg_point_diff`, `visitor_avg_point_diff`, `diff_avg_point_diff`, `home_avg_pts_scored`, `visitor_avg_pts_scored`, `home_avg_pts_allowed`, `visitor_avg_pts_allowed`
-  - **Recent 5-Game Form (6):** `home_last5_win_pct`, `visitor_last5_win_pct`, `diff_last5_win_pct`, `home_last5_point_diff`, `visitor_last5_point_diff`, `diff_last5_point_diff`
-  - **Rest & Fatigue (5):** `home_rest_days`, `visitor_rest_days`, `diff_rest_days`, `home_is_b2b`, `visitor_is_b2b`
-- **Chronological 80/20 Split (No Random Shuffling):**
-  - **Training Set (first 80%):** 744 games (`2022-10-18` to `2023-01-28`) — 59.95% home wins
-  - **Test Set (last 20%):** 187 games (`2023-01-28` to `2023-02-28`) — 58.29% home wins
-  - Sorting by `(date, game_id)` ensures we only ever use past games to predict future games. Features are standardized with `(x - mean) / std` computed **strictly on the training set**.
-- **Baseline Benchmark:** **Always Pick Home Team** (`58.29%` test accuracy), reflecting natural NBA home-court advantage.
+Building on the from-scratch data pipeline and three classifiers from Milestone 2 (`KNN`, `Gaussian Naive Bayes`, and `Logistic Regression`), Milestone 3 moves beyond plain accuracy to evaluate model quality, probability calibration, and full-season consistency. All metric calculations and cross-validation loops are written **100% from scratch** with Python's standard library (`csv`, `os`, `time`) and `numpy` — no `scikit-learn` or `pandas`. (`matplotlib` is used strictly to save charts.)
 
 ---
 
-## Current Progress: Milestone 2 — Data Pipeline & Three From-Scratch Models
+## Milestone 3 Overview
 
-**Files:** `data_utils.py`, `models.py`, `run_milestone2.py`, `milestone_2.txt`
-
-In Milestone 2, we built the complete loading, chronological splitting, and scaling pipeline along with all three from-scratch models in one clean file (`models.py`), each supporting `.fit(X, y)`, `.predict_proba(X)`, and `.predict(X)`:
-
-1. **K-Nearest Neighbors (`KNN`, default `k=15`):** Stores the scaled training games. For a new game, it calculates the straight-line (Euclidean) distance to every past game, finds the 15 most similar matchups, and estimates the home-win probability by taking a vote among them.
-2. **Gaussian Naive Bayes (`GaussianNB`, default `var_smoothing=1e-6`):** Computes the mean and variance of each stat separately for past home wins vs. home losses. For a new game, it compares how well the stats match each bell curve (in log-space to avoid tiny-number underflow) and picks the higher-probability winner.
-3. **Logistic Regression (`LogisticRegression`, default `lr=0.05, epochs=1000`):** Learns one weight per stat plus a bias term using simple batch gradient descent, then passes the weighted sum through a sigmoid curve to output a 0%–100% home-win probability.
-
-### Initial Baseline Results (`python run_milestone2.py`)
-
-| Model | Train Accuracy | Test Accuracy | vs. Baseline (Test) |
-| :--- | :---: | :---: | :---: |
-| Always Pick Home (Baseline) | 59.95% | 58.29% | -- |
-| `KNN (k=15)` | 65.46% | 63.10% | +4.81% |
-| `Gaussian Naive Bayes` | 61.29% | 62.57% | +4.28% |
-| `Logistic Regression` | 62.77% | 63.10% | +4.81% |
-
-**Key Takeaways:**
-- All three untuned models beat the "always pick home" baseline by more than 4 percentage points on unseen late-season games.
-- `KNN (k=15)` and `Logistic Regression` tied for the highest initial test accuracy (`63.10%`), with `Gaussian Naive Bayes` close behind (`62.57%`).
-- Train and test accuracies stay close across all three models, suggesting they capture genuine basketball signal with minimal overfitting.
-- Running `run_milestone2.py` also prints 5 example test-set matchups with each model's predicted winner and home-win probability.
+- **Dataset & Setup:** Evaluated on the **931 regular-season games** from the 2022–23 NBA season (`23` pre-game current-season team stats), using the chronological **80/20 holdout split** (744 training games, 187 unseen test games: 109 home wins and 78 away wins) plus **5-fold expanding-window time-series cross-validation** across the full season.
+- **Models Benchmarked (Untuned Baselines from Milestone 2):**
+  - `Always Pick Home` (baseline using the training home-win rate as predicted probability)
+  - `KNN (k=15)`
+  - `Gaussian NB` (`var_smoothing=1e-6`)
+  - `Logistic Reg` (`lr=0.05, epochs=1000`)
 
 ---
 
-## Next Steps (Upcoming Milestones)
+## Custom Metrics & Validation Built From Scratch
 
-- **Milestone 3:** Implement deeper from-scratch evaluation metrics (confusion matrices, precision, recall, F1-score, ROC-AUC, and log-loss), time-series cross-validation, and diagnostic plots.
-- **Milestone 4:** Perform leak-free hyperparameter tuning strictly on the training set and analyze final model performance and feature importance.
+Because NBA home teams naturally win ~58–60% of games, accuracy alone can hide one-sided predictions. In `metrics.py` and `test_bench.py`, we implemented **7 evaluation metrics** and **time-series CV** from scratch:
+
+- **Confusion Matrix (`TN`, `FP`, `FN`, `TP`):** Breaks down predictions into exact away-win hits (`TN`), wrong home picks (`FP`), missed home wins (`FN`), and home-win hits (`TP`).
+- **Accuracy, Precision, Recall & F1-Score:** Balance overall correctness against false home picks (`TP / (TP + FP)`) and missed home wins (`TP / (TP + FN)`).
+- **ROC Curve & ROC-AUC (Trapezoid Rule):** Sweeps all probability thresholds to measure ranking quality across cutoffs (`0.500` = random coin flip, `1.000` = perfect ranking).
+- **Log-Loss:** Evaluates probability calibration by heavily penalizing overconfident wrong picks (lower is better).
+- **5-Fold Expanding-Window Time-Series CV:** Splits all 931 games (in date order) into 6 chronological blocks (~155 games each), always training on earlier blocks and validating on the next unseen block — with feature standardization computed strictly inside each training fold to prevent data leakage.
 
 ---
 
-## Project Structure
+## Milestone 3 Benchmark Results (`python test_bench.py`)
+
+| Model | Test Acc | Precision | Recall | F1-Score | ROC-AUC | Log-Loss | 5-Fold CV (Mean ± Std) | Fit / Pred (ms) | TN / FP / FN / TP |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Always Pick Home | 58.29% | 58.29% | 100.00% | 73.65% | 0.500 | 0.6799 | 59.54% ± 2.74% | `0.0 / 0.0` | `0 / 78 / 0 / 109` |
+| `KNN (k=15)` | **63.10%** | **65.15%** | 78.90% | 71.37% | 0.655 | **0.6370** | 59.79% ± 4.11% | `0.0 / 8.3` | `32 / 46 / 23 / 86` |
+| `Gaussian NB` | 62.57% | 65.12% | 77.06% | 70.59% | **0.678** | 0.7049 | 58.76% ± 5.80% | `0.2 / 0.1` | `33 / 45 / 25 / 84` |
+| `Logistic Reg` | **63.10%** | 62.66% | 90.83% | **74.16%** | 0.663 | 0.6427 | **61.98% ± 2.28%** | `25.7 / 0.0` | `19 / 59 / 10 / 99` |
+
+### Key Findings & Diagnosis
+
+1. **Why Accuracy & F1 Alone Are Not Enough:** The `Always Pick Home` baseline scores a high F1 (`73.65%`) purely by predicting home win on every game (`TN = 0`, catching zero away wins). ROC-AUC (`0.500` vs. `0.655–0.678`) and the confusion matrices confirm all three learned models capture real basketball signal.
+2. **Logistic Regression Is Most Consistent Across the Season:** Tied for top test accuracy (`63.10%`), posted the highest F1 (`74.16%`), and led 5-fold time-series CV (`61.98% ± 2.28%`). However, it leans heavily toward picking home teams (`TP = 99`, `TN = 19`), pointing to regularization or tuning as a clear improvement target.
+3. **KNN Has the Best Probability Calibration:** Tied for best test accuracy (`63.10%`) and achieved the lowest Log-Loss (`0.6370`) because voting across 15 neighbors avoids extreme probabilities. It also catches more road wins than Logistic Regression (`TN = 32` vs. `19`), at a higher prediction latency (`8.3 ms`).
+4. **Gaussian Naive Bayes Ranks Best but Is Overconfident:** Achieved the top ROC-AUC (`0.678`) in under `0.3 ms` total, yet had the worst Log-Loss (`0.7049` — worse than the baseline). Because correlated team stats (e.g., `home_win_pct`, `diff_win_pct`, `home_avg_point_diff`) violate Naive Bayes' independence assumption, it double-counts evidence and outputs overly extreme probabilities near 0% or 100%.
+
+---
+
+## Visualizations
+
+### Model Metrics Comparison
+![Model Metrics Comparison](plots/model_metrics_comparison.png)
+
+| Confusion Matrices | ROC Curves |
+| :---: | :---: |
+| ![Confusion Matrices](plots/confusion_matrices.png) | ![ROC Curves](plots/roc_curves.png) |
+
+---
+
+## Next Steps (Milestone 4)
+
+Using 5-fold expanding-window CV strictly on the training set (without touching the held-out 187 test games):
+- **KNN:** Tune neighborhood size `k` (e.g., `5` to `45`).
+- **Gaussian NB:** Tune `var_smoothing` (or smaller uncorrelated feature subsets) to fix probability overconfidence.
+- **Logistic Regression:** Tune learning rate, epochs, and light L2 regularization to stabilize weights and reduce home-pick bias.
+
+---
+
+## Milestone 3 Files
 
 ```text
 NbaGamesPredictor/
-├── clean/
-│   ├── nba_2022_23_prepared.csv    # Prepared 931-game dataset used by all scripts
-│   ├── nba_games_clean.csv         # Cleaned raw game scores
-│   └── all_seasons_clean.csv       # Historical player-season stats
-├── data_utils.py                   # CSV loader, 23-feature selector, 80/20 split, scaler
-├── models.py                       # From-scratch KNN, GaussianNB, LogisticRegression
-├── run_milestone2.py               # Milestone 2: train/test accuracy & example predictions
-├── milestone_2.txt                 # Plain-English Milestone 2 summary
-└── README.md                       # Project documentation
+├── metrics.py                         # From-scratch Confusion Matrix, Acc, Prec, Rec, F1, ROC-AUC, Log-Loss
+├── test_bench.py                      # Benchmark runner: metrics, 5-fold time-series CV, CSV export & plots
+├── milestone3_results.csv             # Full Milestone 3 benchmark results table
+├── milestone_3.txt                    # Plain-English Milestone 3 summary
+├── plots/
+│   ├── model_metrics_comparison.png   # Grouped bar chart (Accuracy, F1, ROC-AUC, 5-Fold CV)
+│   ├── confusion_matrices.png         # Side-by-side 2x2 confusion matrices
+│   └── roc_curves.png                 # ROC curves & AUC comparison
+└── README.md                          # Milestone 3 documentation
 ```
 
 ---
 
 ## How to Run
 
-Requires Python 3.10+ with `numpy` installed:
+Requires Python 3.10+ with `numpy` and `matplotlib` installed (along with the Milestone 2 pipeline files `clean/nba_2022_23_prepared.csv`, `data_utils.py`, and `models.py`):
 
 ```bash
-# Milestone 2: Train all 3 models, compare against baseline, and view example test predictions
-python run_milestone2.py
+# Run full Milestone 3 metrics benchmark, 5-fold time-series CV, CSV export, and plot generation
+python test_bench.py
 ```
+
