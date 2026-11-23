@@ -16,6 +16,7 @@ The project was developed as an exercise in understanding the fundamentals of ma
 - [Milestone 4: Hyperparameter Tuning](#milestone-4-hyperparameter-tuning)
 - [Final Results](#final-results)
 - [Visualizations](#visualizations)
+- [Web Frontend (GitHub Pages)](#web-frontend-github-pages)
 - [Repository Structure](#repository-structure)
 - [Installation and Usage](#installation-and-usage)
 - [Technologies Used](#technologies-used)
@@ -369,10 +370,51 @@ Summarizes the performance of the baseline and the final tuned models.
 
 ---
 
+## Web Frontend (GitHub Pages)
+
+The repository includes a lightweight, zero-dependency static frontend (`index.html`, `frontend/styles.css`, `frontend/app.js`) ready for **GitHub Pages**.
+
+All three tuned from-scratch models (**Gaussian Naive Bayes**, **Logistic Regression**, and **K-Nearest Neighbors**) run directly in the browser using exact parameters exported from `models.py` and `data_utils.py` into `frontend/model_data.json`.
+
+### Features
+
+- **Interactive Matchup Predictor:** Pick any Away vs. Home NBA matchup, edit pre-tipoff stats (including Back-to-Back rest scenarios), and see live probabilities from all three models.
+- **Explainability:** Displays the top Logistic Regression feature drivers and the 5 most similar historical training games used by KNN.
+- **187-Game Test Set Explorer:** Filter and inspect every unseen holdout game (Jan 28 – Feb 28, 2023) with actual scores and model picks.
+- **Model Benchmarks & Charts:** Interactive comparison table and gallery of all six evaluation charts.
+
+### Deploy on GitHub Pages
+
+1. Push the repository to GitHub on the `main` branch.
+2. Open **Settings → Pages** in your GitHub repository.
+3. Under **Build and deployment**, set **Source** to **Deploy from a branch**, select **`main`** and **`/ (root)`**, and click **Save**.
+4. Your site will be live at `https://gab172005.github.io/NbaGamesPredictor/`.
+
+### Run Frontend Locally & Refresh Model Data
+
+```bash
+# Optional: re-export model weights and test games after changing Python models
+python export_frontend_data.py
+
+# Serve locally and open http://localhost:8000
+python -m http.server 8000
+```
+
+---
+
 ## Repository Structure
 
 ```text
 NbaGamesPredictor/
+│
+├── index.html                      # GitHub Pages static web frontend
+├── .nojekyll                       # Disables Jekyll processing on GitHub Pages
+├── export_frontend_data.py         # Exports trained models & stats for the web UI
+│
+├── frontend/
+│   ├── styles.css                  # Frontend styling
+│   ├── app.js                      # Vanilla JS inference (mirrors models.py) & UI
+│   └── model_data.json             # Exported weights, scaler, teams, and test games
 │
 ├── clean/
 │   ├── nba_2022_23_prepared.csv

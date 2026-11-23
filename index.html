@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Game Outcome Predictor</title>
+  <meta
+    name="description"
+    content="Interactive NBA game winner predictor powered by three from-scratch machine learning models (Gaussian Naive Bayes, Logistic Regression, and K-Nearest Neighbors)."
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="./frontend/styles.css" />
+</head>
+<body>
+  <!-- Top Navigation -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#top" class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M4.93 4.93l14.14 14.14"></path>
+            <path d="M19.07 4.93L4.93 19.07"></path>
+            <path d="M2 12h20"></path>
+          </svg>
+        </span>
+        <span class="brand-text">NBA Game Predictor</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#predictor">Predictor</a>
+        <a href="#test-games">Test Games</a>
+        <a href="#benchmarks">Benchmarks</a>
+        <a href="#how-it-works">How It Works</a>
+        <a
+          href="https://github.com/Gab172005/NbaGamesPredictor"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="nav-github"
+        >GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Loading / Error Notice -->
+    <div id="status-banner" class="container status-banner hidden" role="alert"></div>
+
+    <!-- Hero Summary -->
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">2022–23 Regular Season · From-Scratch Machine Learning</p>
+        <h1>Predict NBA Game Outcomes Before Tip-Off</h1>
+        <p class="hero-subtitle">
+          Pick any two NBA teams or load a real holdout game to see live win probabilities from
+          three classification models built completely from scratch — running directly in your browser.
+        </p>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-value">63.64%</span>
+            <span class="kpi-label">Best Test Accuracy</span>
+            <span class="kpi-note">Tuned Gaussian NB (+5.35% vs. baseline)</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-value">0.688</span>
+            <span class="kpi-label">Best ROC-AUC</span>
+            <span class="kpi-note">Lowest Log-Loss: 0.6188</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-value">931</span>
+            <span class="kpi-label">NBA Games</span>
+            <span class="kpi-note">744 train / 187 unseen test games</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-value">23</span>
+            <span class="kpi-label">Pre-Tipoff Stats</span>
+            <span class="kpi-note">Record, scoring, form &amp; rest</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1: Interactive Matchup Predictor -->
+    <section id="predictor" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2>Matchup Predictor</h2>
+            <p class="section-desc">
+              Select an Away and Home team, tweak their pre-game stats, or test a real game from the 187-game holdout set.
+            </p>
+          </div>
+        </div>
+
+        <!-- Team & Historical Game Selector -->
+        <div class="card picker-card">
+          <div class="team-picker-row">
+            <div class="picker-group">
+              <label for="away-select" class="picker-label">
+                <span class="dot dot-away"></span> Away Team (Visitor)
+              </label>
+              <select id="away-select" class="select-input"></select>
+            </div>
+
+            <button
+              type="button"
+              id="swap-teams-btn"
+              class="swap-btn"
+              title="Swap Away and Home teams"
+              aria-label="Swap Away and Home teams"
+            >
+              ⇄ Swap
+            </button>
+
+            <div class="picker-group">
+              <label for="home-select" class="picker-label">
+                <span class="dot dot-home"></span> Home Team (Home Court)
+              </label>
+              <select id="home-select" class="select-input"></select>
+            </div>
+          </div>
+
+          <div class="preset-bar">
+            <label for="test-game-select" class="preset-label">Or load an unseen test game:</label>
+            <select id="test-game-select" class="select-input select-compact">
+              <option value="">Custom team matchup (latest 2022–23 stats)</option>
+            </select>
+            <button type="button" id="random-game-btn" class="btn-secondary">Random Test Game</button>
+          </div>
+
+          <!-- Shown only when inspecting an actual holdout game -->
+          <div id="actual-outcome-banner" class="actual-banner hidden"></div>
+        </div>
+
+        <!-- Primary Prediction Verdict + 3 Models -->
+        <div class="card verdict-card">
+          <div class="verdict-top">
+            <div>
+              <span class="verdict-tag">Primary Model · Tuned Gaussian NB</span>
+              <h3 id="verdict-headline" class="verdict-headline">Loading prediction…</h3>
+              <p id="verdict-subtext" class="verdict-subtext"></p>
+            </div>
+            <div id="consensus-badge" class="consensus-badge"></div>
+          </div>
+
+          <!-- Probability Split Bar -->
+          <div class="prob-bar-block" aria-label="Win probability comparison">
+            <div class="prob-bar-labels">
+              <span id="away-bar-label" class="label-away">Away 0%</span>
+              <span class="label-mid">50% Toss-up</span>
+              <span id="home-bar-label" class="label-home">Home 0%</span>
+            </div>
+            <div class="prob-track">
+              <div id="prob-bar-away" class="prob-fill-away" style="width: 50%"></div>
+              <div id="prob-bar-home" class="prob-fill-home" style="width: 50%"></div>
+              <div class="prob-center-tick" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <!-- 3 Tuned Models Comparison -->
+          <div class="model-cards-grid">
+            <article class="model-card model-card-featured">
+              <div class="model-card-head">
+                <div>
+                  <h4>Gaussian Naive Bayes</h4>
+                  <span class="model-meta">Best Accuracy (63.64%) · var_smoothing = 1.0</span>
+                </div>
+                <span id="gnb-pick" class="pick-pill">--</span>
+              </div>
+              <div class="model-prob-row">
+                <span class="prob-caption">Home win probability</span>
+                <strong id="gnb-prob" class="prob-number">--</strong>
+              </div>
+              <div class="mini-track"><div id="gnb-bar" class="mini-fill"></div></div>
+              <p id="gnb-note" class="model-note">Compares bell-curve stat distributions for past wins vs. losses.</p>
+            </article>
+
+            <article class="model-card">
+              <div class="model-card-head">
+                <div>
+                  <h4>Logistic Regression</h4>
+                  <span class="model-meta">Best F1-Score (74.73%) · L2 = 0.1</span>
+                </div>
+                <span id="lr-pick" class="pick-pill">--</span>
+              </div>
+              <div class="model-prob-row">
+                <span class="prob-caption">Home win probability</span>
+                <strong id="lr-prob" class="prob-number">--</strong>
+              </div>
+              <div class="mini-track"><div id="lr-bar" class="mini-fill"></div></div>
+              <p id="lr-note" class="model-note">Combines all 23 standardized team stats using learned weights.</p>
+            </article>
+
+            <article class="model-card">
+              <div class="model-card-head">
+                <div>
+                  <h4>K-Nearest Neighbors</h4>
+                  <span class="model-meta">Similarity Search · k = 35</span>
+                </div>
+                <span id="knn-pick" class="pick-pill">--</span>
+              </div>
+              <div class="model-prob-row">
+                <span class="prob-caption">Home win probability</span>
+                <strong id="knn-prob" class="prob-number">--</strong>
+              </div>
+              <div class="mini-track"><div id="knn-bar" class="mini-fill"></div></div>
+              <p id="knn-note" class="model-note">Checks how often the home team won in the 35 most similar games.</p>
+            </article>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Tale of the Tape (Editable Stats) -->
+        <div class="card stats-card">
+          <div class="card-header-row">
+            <div>
+              <h3>Pre-Tipoff Team Stats (Editable)</h3>
+              <p class="card-sub">
+                Adjust any number below to run "what-if" scenarios (for example, set Rest Days to <strong>1</strong> for a Back-to-Back game).
+              </p>
+            </div>
+            <button type="button" id="reset-stats-btn" class="btn-secondary">Reset Team Defaults</button>
+          </div>
+
+          <div class="tape-grid">
+            <div class="tape-header tape-away-col">
+              <span id="tape-away-name">Away Team</span>
+            </div>
+            <div class="tape-header tape-mid-col">Pre-Tipoff Stat</div>
+            <div class="tape-header tape-home-col">
+              <span id="tape-home-name">Home Team</span>
+            </div>
+
+            <!-- Row 1: Win % -->
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="away-win-pct" type="number" min="0" max="100" step="0.1" aria-label="Away season win percentage" />
+                <span>%</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Season Win %</strong>
+              <span id="diff-win-pct-badge" class="diff-chip"></span>
+            </div>
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="home-win-pct" type="number" min="0" max="100" step="0.1" aria-label="Home season win percentage" />
+                <span>%</span>
+              </div>
+            </div>
+
+            <!-- Row 2: Points Scored -->
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="away-pts-scored" type="number" min="80" max="140" step="0.1" aria-label="Away average points scored" />
+                <span>PPG</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Avg Points Scored</strong>
+              <span class="diff-sub">Season scoring pace</span>
+            </div>
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="home-pts-scored" type="number" min="80" max="140" step="0.1" aria-label="Home average points scored" />
+                <span>PPG</span>
+              </div>
+            </div>
+
+            <!-- Row 3: Points Allowed -->
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="away-pts-allowed" type="number" min="80" max="140" step="0.1" aria-label="Away average points allowed" />
+                <span>PPG</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Avg Points Allowed</strong>
+              <span id="diff-point-diff-badge" class="diff-chip"></span>
+            </div>
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="home-pts-allowed" type="number" min="80" max="140" step="0.1" aria-label="Home average points allowed" />
+                <span>PPG</span>
+              </div>
+            </div>
+
+            <!-- Row 4: Last 5 Win % -->
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="away-last5-win" type="number" min="0" max="100" step="20" aria-label="Away last 5 games win percentage" />
+                <span>%</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Last 5 Games Win %</strong>
+              <span class="diff-sub">Recent form</span>
+            </div>
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="home-last5-win" type="number" min="0" max="100" step="20" aria-label="Home last 5 games win percentage" />
+                <span>%</span>
+              </div>
+            </div>
+
+            <!-- Row 5: Last 5 Point Diff -->
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="away-last5-diff" type="number" min="-35" max="35" step="0.5" aria-label="Away last 5 games point differential" />
+                <span>pts</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Last 5 Avg Margin</strong>
+              <span class="diff-sub">Recent scoring margin</span>
+            </div>
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="home-last5-diff" type="number" min="-35" max="35" step="0.5" aria-label="Home last 5 games point differential" />
+                <span>pts</span>
+              </div>
+            </div>
+
+            <!-- Row 6: Rest Days & B2B -->
+            <div class="tape-cell">
+              <div class="rest-control">
+                <select id="away-rest" class="select-small" aria-label="Away team rest days">
+                  <option value="1">1 day (Back-to-Back)</option>
+                  <option value="2" selected>2 days (Normal)</option>
+                  <option value="3">3 days</option>
+                  <option value="4">4 days</option>
+                  <option value="5">5 days</option>
+                  <option value="6">6 days</option>
+                  <option value="7">7+ days</option>
+                </select>
+                <span id="away-b2b-badge" class="b2b-badge hidden">B2B Tired</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Rest &amp; Fatigue</strong>
+              <span class="diff-sub">1 day triggers Back-to-Back</span>
+            </div>
+            <div class="tape-cell">
+              <div class="rest-control">
+                <select id="home-rest" class="select-small" aria-label="Home team rest days">
+                  <option value="1">1 day (Back-to-Back)</option>
+                  <option value="2" selected>2 days (Normal)</option>
+                  <option value="3">3 days</option>
+                  <option value="4">4 days</option>
+                  <option value="5">5 days</option>
+                  <option value="6">6 days</option>
+                  <option value="7">7+ days</option>
+                </select>
+                <span id="home-b2b-badge" class="b2b-badge hidden">B2B Tired</span>
+              </div>
+            </div>
+
+            <!-- Row 7: Games Played -->
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="away-gp" type="number" min="0" max="82" step="1" aria-label="Away games played" />
+                <span>GP</span>
+              </div>
+            </div>
+            <div class="tape-label">
+              <strong>Games Played</strong>
+              <span class="diff-sub">Point in season</span>
+            </div>
+            <div class="tape-cell">
+              <div class="input-unit">
+                <input id="home-gp" type="number" min="0" max="82" step="1" aria-label="Home games played" />
+                <span>GP</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="footnote">
+            All 5 matchup differentials (<code>diff_*</code>), season point margins, and back-to-back indicators are calculated automatically to build the exact 23-feature model vector.
+          </p>
+        </div>
+
+        <!-- Explainability Row: Why This Prediction? -->
+        <div class="explain-grid">
+          <div class="card">
+            <h3>What's Driving This Pick?</h3>
+            <p class="card-sub">
+              Top feature contributions from Tuned Logistic Regression for this matchup
+              (<span class="text-home">Blue = favors Home</span>, <span class="text-away">Orange = favors Away</span>).
+            </p>
+            <div id="drivers-list" class="drivers-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Most Similar Past Games (KNN)</h3>
+            <p class="card-sub">
+              The 5 closest historical training games out of the 35 neighbors used by Tuned KNN.
+            </p>
+            <div id="neighbors-list" class="neighbors-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Unseen Holdout Test Games -->
+    <section id="test-games" class="section section-alt">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2>Unseen Test Set Explorer (187 Games)</h2>
+            <p class="section-desc">
+              Every game from Jan 28 to Feb 28, 2023 was locked away during training and tuning. Filter below or click <strong>Inspect</strong> to examine any matchup.
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="explorer-toolbar">
+            <div class="toolbar-filters">
+              <select id="filter-team" class="select-input select-compact" aria-label="Filter games by team">
+                <option value="ALL">All 30 Teams</option>
+              </select>
+              <select id="filter-outcome" class="select-input select-compact" aria-label="Filter games by prediction outcome">
+                <option value="ALL">All Outcomes</option>
+                <option value="GNB_RIGHT">Gaussian NB Correct</option>
+                <option value="GNB_WRONG">Gaussian NB Missed</option>
+                <option value="AWAY_WIN">Away Team Wins Only</option>
+                <option value="HOME_WIN">Home Team Wins Only</option>
+              </select>
+            </div>
+            <div id="explorer-summary" class="explorer-summary"></div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Matchup &amp; Final Score</th>
+                  <th>Actual</th>
+                  <th>Gaussian NB</th>
+                  <th>Logistic Reg</th>
+                  <th>KNN (k=35)</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="test-games-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination-bar">
+            <span id="page-info" class="page-info"></span>
+            <div class="page-buttons">
+              <button type="button" id="prev-page-btn" class="btn-secondary">← Previous</button>
+              <button type="button" id="next-page-btn" class="btn-secondary">Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Benchmarks & Visualizations -->
+    <section id="benchmarks" class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2>Model Benchmarks &amp; Charts</h2>
+            <p class="section-desc">
+              Evaluated on the same 187 chronological holdout games plus 5-fold expanding-window cross-validation.
+            </p>
+          </div>
+          <div class="segmented-toggle" role="group" aria-label="Filter benchmark table">
+            <button type="button" id="toggle-tuned" class="seg-btn active">Final Tuned</button>
+            <button type="button" id="toggle-all" class="seg-btn">Untuned vs. Tuned</button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-wrap">
+            <table class="data-table bench-table">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th>Settings</th>
+                  <th class="num">Test Acc</th>
+                  <th class="num">F1-Score</th>
+                  <th class="num">ROC-AUC</th>
+                  <th class="num">Log-Loss</th>
+                  <th class="num">5-Fold CV</th>
+                </tr>
+              </thead>
+              <tbody id="benchmarks-tbody"></tbody>
+            </table>
+          </div>
+          <p class="footnote">
+            Higher is better for Accuracy, F1-Score, ROC-AUC, and 5-Fold CV. Lower is better for Log-Loss. Green highlights mark the best score in each metric.
+          </p>
+        </div>
+
+        <!-- Project Charts Viewer -->
+        <div class="card charts-card">
+          <div class="chart-tabs" role="tablist" aria-label="Evaluation charts">
+            <button type="button" class="chart-tab active" data-chart="final">Final Comparison</button>
+            <button type="button" class="chart-tab" data-chart="importance">Top NBA Stats</button>
+            <button type="button" class="chart-tab" data-chart="tuning">Untuned vs. Tuned</button>
+            <button type="button" class="chart-tab" data-chart="roc">ROC Curves</button>
+            <button type="button" class="chart-tab" data-chart="confusion">Confusion Matrices</button>
+            <button type="button" class="chart-tab" data-chart="m3">M3 Baseline Metrics</button>
+          </div>
+
+          <figure class="chart-stage">
+            <img
+              id="chart-image"
+              src="./plots/final_model_comparison.png"
+              alt="Final NBA model comparison chart"
+              loading="lazy"
+            />
+            <figcaption id="chart-caption"></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: How It Works -->
+    <section id="how-it-works" class="section section-alt">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <h2>How It Works</h2>
+            <p class="section-desc">
+              Built end-to-end without <code>scikit-learn</code> or <code>pandas</code> to demonstrate core machine learning fundamentals clearly.
+            </p>
+          </div>
+        </div>
+
+        <div class="steps-grid">
+          <article class="card step-card">
+            <span class="step-num">01</span>
+            <h3>Leak-Free Chronological Split</h3>
+            <p>
+              931 games from the 2022–23 season are sorted by date and split 80/20 without shuffling.
+              Feature scaling (<code>(x − mean) / std</code>) is learned strictly on the first 744 games so future outcomes never leak into training.
+            </p>
+          </article>
+
+          <article class="card step-card">
+            <span class="step-num">02</span>
+            <h3>Three From-Scratch Models</h3>
+            <p>
+              KNN, Gaussian Naive Bayes, and Logistic Regression were written in pure Python &amp; NumPy and tuned over 46 configs via 5-fold time-series CV.
+              This webpage executes those exact trained formulas live in vanilla JavaScript.
+            </p>
+          </article>
+
+          <article class="card step-card">
+            <span class="step-num">03</span>
+            <h3>Realistic NBA Accuracy</h3>
+            <p>
+              NBA games have heavy night-to-night randomness (injuries, foul trouble, hot 3-point shooting).
+              Reaching <strong>63.64%</strong> beats the 58.29% always-pick-home baseline by +5.35 points using pre-tipoff team box scores alone.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>
+        <strong>NBA Game Outcome Predictor</strong> · 2022–23 Regular Season (Oct 18, 2022 – Feb 28, 2023)
+      </p>
+      <p class="footer-links">
+        <a href="https://github.com/Gab172005/NbaGamesPredictor" target="_blank" rel="noopener noreferrer">Source Code on GitHub</a>
+        <span>·</span>
+        <a href="#top">Back to Top ↑</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Lightbox Modal for Zooming Charts -->
+  <div id="chart-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Enlarged chart">
+    <button type="button" id="modal-close-btn" class="modal-close" aria-label="Close enlarged chart">✕</button>
+    <img id="modal-image" src="" alt="" />
+  </div>
+
+  <script src="./frontend/app.js"></script>
+</body>
+</html>
