@@ -1,35 +1,53 @@
 /* ==========================================================================
-   NBA Game Outcome Predictor — Clean Static Frontend Styles
-   Palette: Light editorial slate + Cobalt Blue (Home) + Court Orange (Away)
+   NBA Game Outcome Predictor — Editorial Sports Data Journalism Theme
+   Inspired by FiveThirtyEight / NYT The Upshot / Classic Box-Score Ledgers
+   Zero content or JS changes · Pure typography, paper & structural hairline UI
    ========================================================================== */
 
 :root {
-  --bg: #f8fafc;
-  --bg-alt: #f1f5f9;
+  color-scheme: light;
+
+  --bg: #f6f3ec;
+  --bg-alt: #ede8dd;
   --surface: #ffffff;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --surface-subtle: #faf8f3;
+  --surface-hover: #f5f2ea;
 
-  --text: #0f172a;
-  --text-muted: #475569;
-  --text-light: #64748b;
+  --ink: #141413;
+  --text: #141413;
+  --text-muted: #524f49;
+  --text-light: #78746c;
 
-  --home: #1d4ed8;
-  --home-bg: #eff6ff;
-  --home-border: #bfdbfe;
+  --rule: #d6d0c4;
+  --rule-strong: #b5aea0;
 
-  --away: #ea580c;
-  --away-bg: #fff7ed;
-  --away-border: #fed7aa;
+  --home: #1b4965;
+  --home-bg: #edf3f7;
+  --home-border: #bdd2e0;
 
-  --good: #059669;
-  --good-bg: #ecfdf5;
-  --bad: #dc2626;
-  --bad-bg: #fef2f2;
+  --away: #b8431b;
+  --away-bg: #fbf0eb;
+  --away-border: #ebc8b8;
 
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --good: #166534;
+  --good-bg: #ebf5ee;
+  --good-border: #b7dfc2;
+
+  --bad: #991b1b;
+  --bad-bg: #fceeee;
+  --bad-border: #eababa;
+
+  --warn: #92400e;
+  --warn-bg: #fef6e6;
+  --warn-border: #ecd09a;
+
+  --radius: 4px;
+  --radius-sm: 3px;
+  --shadow: 0 1px 2px rgba(20, 20, 19, 0.04);
+
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 *,
@@ -40,27 +58,45 @@
 
 html {
   scroll-behavior: smooth;
+  background: var(--bg);
 }
 
 body {
   margin: 0;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   color: var(--text);
   background: var(--bg);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, p {
+h1, h2 {
+  font-family: var(--font-serif);
+  margin-top: 0;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+h3, h4 {
+  font-family: var(--font-sans);
+  margin-top: 0;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+p {
   margin-top: 0;
 }
 
 code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.88em;
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  color: var(--ink);
   background: var(--bg-alt);
-  padding: 0.12em 0.35em;
-  border-radius: 4px;
+  border: 1px solid var(--rule);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
 }
 
 .hidden {
@@ -69,49 +105,55 @@ code {
 
 .container {
   width: 100%;
-  max-width: 1080px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 22px;
 }
 
-/* Header & Nav ----------------------------------------------------------- */
+/* Masthead Header & Navigation ------------------------------------------- */
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 30;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+  z-index: 40;
+  background: #fbf9f5;
+  border-bottom: 1px solid var(--rule);
 }
 
 .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 60px;
+  gap: 18px;
+  min-height: 58px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--text);
+  color: var(--ink);
   text-decoration: none;
-  font-weight: 800;
-  font-size: 1.02rem;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.16rem;
   letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
 
 .brand-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--text);
-  color: #ffffff;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: #d95d39;
+}
+
+.brand-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .nav-links {
@@ -124,112 +166,134 @@ code {
 .nav-links a {
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.87rem;
   font-weight: 500;
-  transition: color 0.15s ease;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.14s ease, border-color 0.14s ease;
+  white-space: nowrap;
 }
 
 .nav-links a:hover {
-  color: var(--home);
+  color: var(--ink);
+  border-bottom-color: var(--away);
 }
 
 .nav-github {
-  padding: 5px 11px;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  color: var(--text) !important;
+  padding: 5px 12px !important;
+  border: 1px solid var(--ink) !important;
+  border-radius: var(--radius-sm);
+  color: var(--ink) !important;
   font-weight: 600 !important;
+  background: transparent;
+}
+
+.nav-github:hover {
+  background: var(--ink);
+  color: #ffffff !important;
+  border-bottom-color: var(--ink) !important;
 }
 
 /* Status Banner ---------------------------------------------------------- */
 .status-banner {
   margin-top: 16px;
-  padding: 14px 18px;
+  padding: 13px 16px;
   border-radius: var(--radius-sm);
   background: var(--bad-bg);
   color: var(--bad);
-  border: 1px solid #fecaca;
-  font-size: 0.92rem;
+  border: 1px solid var(--bad-border);
+  font-size: 0.9rem;
 }
 
-/* Hero ------------------------------------------------------------------- */
+/* Hero & Box-Score KPI Ledger -------------------------------------------- */
 .hero {
-  padding: 44px 0 32px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
+  padding: 32px 0 28px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
 }
 
 .eyebrow {
-  display: inline-block;
+  display: block;
   margin-bottom: 10px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--home-bg);
-  color: var(--home);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  padding-left: 10px;
+  border-left: 3px solid var(--away);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .hero h1 {
-  font-size: clamp(1.75rem, 3.6vw, 2.45rem);
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  margin-bottom: 12px;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin-bottom: 10px;
+  color: var(--ink);
 }
 
 .hero-subtitle {
   max-width: 680px;
   color: var(--text-muted);
-  font-size: 1.02rem;
-  margin-bottom: 26px;
+  font-size: 1rem;
+  margin-bottom: 24px;
 }
 
+/* Unified 4-column box-score ledger (no detached rainbow cards) */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--surface);
 }
 
 .kpi-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  box-shadow: var(--shadow);
+  padding: 15px 18px;
+  border-right: 1px solid var(--rule);
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
+.kpi-card:last-child {
+  border-right: none;
+}
+
 .kpi-value {
-  font-size: 1.55rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
+  color: var(--ink);
+  line-height: 1.15;
 }
 
 .kpi-label {
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 2px;
 }
 
 .kpi-note {
-  font-size: 0.78rem;
-  color: var(--text-light);
+  font-size: 0.76rem;
+  color: var(--text-muted);
 }
 
-/* Sections & Cards ------------------------------------------------------- */
+/* Sections & Paper Sheets ------------------------------------------------ */
 .section {
-  padding: 44px 0;
+  padding: 36px 0;
+  scroll-margin-top: 64px;
 }
 
 .section-alt {
   background: var(--bg-alt);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
 }
 
 .section-header {
@@ -238,24 +302,24 @@ code {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .section-header h2 {
-  font-size: 1.45rem;
+  font-size: 1.7rem;
   letter-spacing: -0.02em;
   margin-bottom: 4px;
 }
 
 .section-desc {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: 0.94rem;
   margin-bottom: 0;
 }
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 22px;
   box-shadow: var(--shadow);
@@ -267,13 +331,13 @@ code {
 }
 
 .card h3 {
-  font-size: 1.08rem;
+  font-size: 1.06rem;
   letter-spacing: -0.01em;
   margin-bottom: 4px;
 }
 
 .card-sub {
-  font-size: 0.88rem;
+  font-size: 0.87rem;
   color: var(--text-muted);
   margin-bottom: 16px;
 }
