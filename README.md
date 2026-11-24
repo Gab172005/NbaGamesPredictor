@@ -4,6 +4,8 @@ An NBA game outcome predictor that estimates whether the **home team wins** a re
 
 The project was developed as an exercise in understanding the fundamentals of machine learning, from data preparation and feature engineering to model implementation, evaluation, cross-validation, and hyperparameter tuning.
 
+**Live Web Demo:** https://gab172005.github.io/NbaGamesPredictor/
+
 ---
 
 ## Table of Contents
@@ -401,7 +403,8 @@ NbaGamesPredictor/
 ├── run_milestone2.py
 ├── test_bench.py
 ├── tune_models.py
-└── run_milestone4.py
+├── run_milestone4.py
+└── requirements.txt
 ```
 
 ---
@@ -426,6 +429,8 @@ cd NbaGamesPredictor
 ### 2. Install Dependencies
 
 ```bash
+pip install -r requirements.txt
+# or directly:
 pip install numpy matplotlib
 ```
 
