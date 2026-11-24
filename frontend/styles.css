@@ -1395,31 +1395,131 @@ code {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .kpi-card:nth-child(2) {
+    border-right: none;
+  }
+  .kpi-card:nth-child(1),
+  .kpi-card:nth-child(2) {
+    border-bottom: 1px solid var(--rule);
+  }
   .model-cards-grid,
   .explain-grid,
   .steps-grid {
     grid-template-columns: 1fr;
   }
+  .model-card,
+  .step-card {
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .model-card:last-child,
+  .step-card:last-child {
+    border-bottom: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Keep masthead compact on a single scrollable strip instead of 3 rows */
+  .header-inner {
+    min-height: 52px;
+    gap: 12px;
+  }
+  .brand {
+    font-size: 1rem;
+  }
+  .nav-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 12px;
+  }
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-links a {
+    font-size: 0.82rem;
+  }
 }
 
 @media (max-width: 680px) {
+  .container {
+    padding: 0 14px;
+  }
+  .card {
+    padding: 15px;
+  }
   .team-picker-row {
     grid-template-columns: 1fr;
   }
   .swap-btn {
     justify-self: start;
   }
+  .prob-bar-labels {
+    font-size: 0.76rem;
+  }
+  .label-mid {
+    font-size: 0.67rem;
+  }
+  /* Verified mobile Tale-of-the-Tape layout: zero input clipping or overlap */
   .tape-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(115px, 145px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(94px, 112px) minmax(0, 1fr);
+  }
+  .tape-header {
+    padding: 8px 5px;
+    font-size: 0.68rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .tape-cell,
   .tape-label {
-    padding: 8px;
+    padding: 7px 4px;
+  }
+  .tape-label strong {
+    font-size: 0.73rem;
+    line-height: 1.25;
+  }
+  .diff-sub,
+  .diff-chip {
+    font-size: 0.64rem;
+  }
+  .input-unit {
+    width: 100%;
+    max-width: 112px;
   }
   .input-unit input {
-    width: 62px;
+    width: 100%;
+    min-width: 0;
+    padding: 5px 4px;
+    font-size: 0.78rem;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+  .input-unit input::-webkit-inner-spin-button,
+  .input-unit input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .input-unit span {
+    padding: 5px 4px;
+    font-size: 0.64rem;
+    flex-shrink: 0;
+  }
+  .rest-control {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 4px;
+  }
+  .tape-cell:nth-child(3n) .rest-control {
+    justify-content: flex-end;
   }
   .rest-control .select-small {
-    min-width: 112px;
+    width: 100%;
+    min-width: 0;
+    max-width: 112px;
+    padding: 5px 4px;
+    font-size: 0.71rem;
   }
 }
